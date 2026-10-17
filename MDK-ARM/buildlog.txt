@@ -1,0 +1,11 @@
+*** Using Compiler 'V5.06 update 7 (build 960)', folder: 'E:\MDK5.36\ARM\ARMCC\Bin'
+Build target 'myLCD'
+linking...
+myLCD\myLCD.axf: Error: L6218E: Undefined symbol led_set (referred from usmart_config.o).
+myLCD\myLCD.axf: Error: L6218E: Undefined symbol test_fun (referred from usmart_config.o).
+Not enough information to list image symbols.
+Not enough information to list load addresses in the image map.
+Finished: 2 information, 0 warning and 2 error messages.
+"myLCD\myLCD.axf" - 2 Error(s), 0 Warning(s).
+Target not created.
+Build Time Elapsed:  00:00:00

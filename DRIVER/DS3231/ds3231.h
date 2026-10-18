@@ -7,7 +7,8 @@
  *
  * Step 1 implementation target.
  */
-
+/* 所有带移位的操作最好都加上括号 所有带移位的操作最好都加上括号 所有带移位的操作最好都加上括号 所有带移位的操作最好都加上括号*/
+/*因为移位的优先级很低  & | ~ 这些优先级都比他高  你不加括号就会最后才移位 包出问题的*/
 #ifndef __DS3231_H
 #define __DS3231_H
 
@@ -16,6 +17,10 @@
 /* I2C Addresses */
 #define DS3231_ADDR         0x68
 #define AT24C32_ADDR        0x57
+/* AT24C32 EEPROM */
+#define AT24C32_PAGE_SIZE     32u
+#define AT24C32_WRITE_CYCLE   5u    /* tWR: 内部写周期最大 5ms */
+
 
 /* DS3231 Registers */
 #define DS3231_REG_SEC      0x00
@@ -46,6 +51,11 @@ typedef struct {
 #define DS3231_ERR_I2C     -1
 #define DS3231_ERR_OSF     -2   /* Oscillator Stop Flag = power was lost */
 
+/* bit positions */
+#define DS3231_BIT_OSF      ((uint8_t)(1u << 7))  /*~ 优先级高于 <<  如果不给整体加括号  到时候要清位的时候会先取反*/
+#define DS3231_BIT_EN32KHZ  ((uint8_t)(1u << 3))
+
+#define DS3231_CTRL_BBSQW ((uint8_t)(1u << 6))  /* 使能电池方波 */
 /**
  * @brief  Initialize DS3231 (check OSF flag, disable 32kHz output).
  */

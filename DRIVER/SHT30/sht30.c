@@ -55,8 +55,8 @@ int8_t SHT30_Read(int16_t *temp_x100, uint16_t *humi_x100)
     if(ret != I2C_OK) return SHT30_ERR_I2C;
     if (SHT30_CRC8(buf, 2) != buf[2] || SHT30_CRC8(buf+3, 2) != buf[5]) return SHT30_ERR_CRC;
 
-    *temp_x100 = (int16_t)(-4500 + (17500 * (int32_t)buf[0] << 8 | buf[1]) / 65535);
-    *humi_x100 = (uint16_t)((10000 * (uint32_t)buf[3] << 8 | buf[4]) / 65535);
+    *temp_x100 = (int16_t)(-4500 + (17500 * (int32_t)((buf[0] << 8) | buf[1])) / 65535);
+    *humi_x100 = (uint16_t)((10000 * (uint32_t)((buf[3] << 8) | buf[4])) / 65535);
     
     return SHT30_OK;
 }

@@ -1,0 +1,22 @@
+*** Using Compiler 'V5.06 update 7 (build 960)', folder: 'E:\MDK5.36\ARM\ARMCC\Bin'
+Build target 'DMA'
+compiling ds3231.c...
+..\DRIVER\DS3231\ds3231.c(8): error:  #5: cannot open source input file "i2c1_reg.h": No such file or directory
+  #include "i2c1_reg.h"
+..\DRIVER\DS3231\ds3231.c: 0 warnings, 1 error
+compiling spi_reg.c...
+compiling max485.c...
+..\DRIVER\MAX485\max485.c(8): error:  #5: cannot open source input file "delay.h": No such file or directory
+  #include "delay.h"
+..\DRIVER\MAX485\max485.c: 0 warnings, 1 error
+compiling sht30.c...
+..\DRIVER\SHT30\sht30.c(8): error:  #5: cannot open source input file "i2c1_reg.h": No such file or directory
+  #include "i2c1_reg.h"
+..\DRIVER\SHT30\sht30.c: 0 warnings, 1 error
+compiling main.c...
+../Core/Src/main.c(41): error:  #5: cannot open source input file "./DRIVER/i2c1_reg.h": No such file or directory
+  #include "./DRIVER/i2c1_reg.h"
+../Core/Src/main.c: 0 warnings, 1 error
+"..\Outputs\DMA.axf" - 4 Error(s), 0 Warning(s).
+Target not created.
+Build Time Elapsed:  00:00:01

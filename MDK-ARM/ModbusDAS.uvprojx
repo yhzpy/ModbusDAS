@@ -649,6 +649,11 @@
               <FileType>1</FileType>
               <FilePath>..\DRIVER\i2c1_reg.c</FilePath>
             </File>
+            <File>
+              <FileName>spi_reg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\DRIVER\spi_reg.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

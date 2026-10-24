@@ -1,4 +1,5 @@
 #include "spi_reg.h"
+#include "stm32f1xx.h"      /* CMSIS 寄存器定义（SPI2, GPIOB, RCC） */
 #include <stdint.h>
 
 #define MAX_WAIT_TIME 50000
@@ -43,6 +44,33 @@
 只需设置 SSOE 位。必须设置 MSTR 和 SPE 位（它们只有在 NSS 引脚连接到高电平信号时才保持设置状态）。*/
 int8_t SPI_Init(SPI_TypeDef *spi)
 {
+    /*--- 第一步：开时钟（SPI2 挂 APB1，GPIOB 挂 APB2，F1 易混点）---*/
+    if (spi == SPI2)
+    {
+        /*ENR 时钟使能寄存器*/
+        RCC->APB2ENR |= (1 << 0);   /* AFIOEN: 复用功能时钟 */
+        RCC->APB2ENR |= (1 << 3);   /* IOPBEN: GPIOB 时钟（PB12~PB15） */
+        RCC->APB1ENR |= (1 << 14);  /* SPI2EN: SPI2 外设时钟 */
+
+        /*--- 第二步：配置 SPI2 四个引脚 ---*/
+        /*
+         * GPIOB->CRH 管 Pin8~Pin15，每 Pin 占 4 bit [CNF1:CNF0:MODE1:MODE0]
+         * PB12 = bit[19:16], PB13 = bit[23:20], PB14 = bit[27:24], PB15 = bit[31:28]
+         * PB12 CS : 通用推挽输出 50MHz → 0x3，默认拉高（Flash 未选中）
+         * PB13 SCK: AF 推挽 50MHz     → 0xB
+         * PB14 MISO: 浮空输入         → 0x4
+         * PB15 MOSI: AF 推挽 50MHz    → 0xB
+         */
+        /*CS 只能在 PB12 是通用输出模式（0x3）时由 ODR/BSRR 控制；如果是复用模式，引脚控制权已交给 SPI 硬件，
+        程序写 ODR 无效——这也是之前 I2C 总线恢复时要把 SCL 临时切回通用模式才能手动打脉冲的原因。*/
+        GPIOB->CRH &= ~(0xFFFFU << 16);         /* 清 PB12~PB15 原有配置 */
+        GPIOB->CRH |=  (0x3U << 16)             /* PB12: 通用推挽输出 50MHz (CS) */
+                     |  (0xBU << 20)            /* PB13: AF 推挽 50MHz (SCK) */
+                     |  (0x4U << 24)            /* PB14: 浮空输入 (MISO) */
+                     |  (0xBU << 28);           /* PB15: AF 推挽 50MHz (MOSI) */
+        GPIOB->BSRR = (1 << 12);                /* CS 默认高：Flash 未选中 */
+    }
+
     spi->CR1 = SPI_CR1_MSTR | SPI_CR1_BR_DIV4 | SPI_CR1_SSM | SPI_CR1_SSI;
     // spi->CR2 = SPI_CR2_SSOE;
     spi->CR1 |= SPI_CR1_SPE;

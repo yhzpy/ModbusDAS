@@ -24,6 +24,8 @@
 /* USER CODE BEGIN Includes */
 #include "FreeRTOS.h"
 #include "task.h"
+#include "usart.h"
+#include "./PROTOCOL/modbus_rtu.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,7 +63,7 @@ extern UART_HandleTypeDef huart1;
 extern TIM_HandleTypeDef htim1;
 
 /* USER CODE BEGIN EV */
-
+extern UART_HandleTypeDef huart2;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -233,17 +235,32 @@ void USART1_IRQHandler(void)
   /* USER CODE END USART1_IRQn 1 */
 }
 
+/**
+  * @brief This function handles USART2 global interrupt (RS485 Modbus).
+  */
+void USART2_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART2_IRQn 0 */
+
+  /* USER CODE END USART2_IRQn 0 */
+  HAL_UART_IRQHandler(&huart2);
+  /* USER CODE BEGIN USART2_IRQn 1 */
+  /* IDLE 中断 = Modbus 帧结束检测。
+   * RM0008: IDLE 由"读 SR + 读 DR"序列清除，写 0 无效（同 SPI OVR 的教训）。 */
+  if (__HAL_UART_GET_FLAG(&huart2, UART_FLAG_IDLE) != RESET)
+  {
+    (void)huart2.Instance->SR;
+    (void)huart2.Instance->DR;
+    ModbusRTU_UART_IDLE_ISR();
+  }
+  /* USER CODE END USART2_IRQn 1 */
+}
+
 /* USER CODE BEGIN 1 */
 
-/* TODO Step 3: USART2 IDLE interrupt handler for Modbus RTU frame detection.
- * After CubeMX generates USART2_IRQHandler above, add IDLE detection inside:
- *
- *   In USART2_IRQHandler USER CODE section:
- *     if (__HAL_UART_GET_FLAG(&huart2, UART_FLAG_IDLE)) {
- *         __HAL_UART_CLEAR_IDLEFLAG(&huart2);
- *         ModbusRTU_UART_IDLE_ISR();
- *     }
- */
+/* Step 3 done: USART2_IRQHandler (上方) 检测 IDLE 后调 ModbusRTU_UART_IDLE_ISR()。
+ * 采用 IDLE-only 断帧方案：一帧收完总线空闲即触发 IDLE，无需 TIM6 T3.5。 */
+
 
 /* TODO Step 3: TIM6 update interrupt for Modbus T3.5 character timeout.
  * CubeMX will generate TIM6_IRQHandler above. In its USER CODE section:

@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xE</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;../Drivers;../Middlewares;../Middlewares/FreeRTOS/Portable;../Middlewares/FreeRTOS/include;../Middlewares/FreeRTOS/Portable/RVDS/ARM_CM3;../Middlewares/FreeRTOS</IncludePath>
+              <IncludePath>..;../DRIVER;../DRIVER/MAX485;../PROTOCOL;../Drivers/SYSTEM/delay;../Drivers/SYSTEM/sys;../Drivers/SYSTEM/usart;../Drivers/BSP/LCD;../Drivers/BSP/LED;../Drivers/BSP/KEY;../Drivers/BSP/DMA;../Core/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;../Drivers;../Middlewares;../Middlewares/FreeRTOS/Portable;../Middlewares/FreeRTOS/include;../Middlewares/FreeRTOS/Portable/RVDS/ARM_CM3;../Middlewares/FreeRTOS</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -653,6 +653,16 @@
               <FileName>spi_reg.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\DRIVER\spi_reg.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Application/PROTOCOL</GroupName>
+          <Files>
+            <File>
+              <FileName>modbus_rtu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\PROTOCOL\modbus_rtu.c</FilePath>
             </File>
           </Files>
         </Group>

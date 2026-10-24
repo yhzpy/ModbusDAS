@@ -46,7 +46,19 @@
 #include "./DRIVER/flash_log.h"
 #include "./PROTOCOL/modbus_reg_map.h"
 #include "./PROTOCOL/modbus_rtu.h"
+
+/* BSP 命名适配：BSP 库为旧版小写命名（led_init/lcd_init/lcd_clear），
+ * main 骨架按新版大写命名（LED_Init/LCD_Init/LCD_Clear）调用，此处宏桥接。
+ * lcd_show_string 比 LCD_ShowString 多一个 color 参数，固定用 BLACK。 */
+#define LED_Init()          led_init()
+#define LED0_Toggle()       LED0_TOGGLE()
+#define LED1_Toggle()       LED1_TOGGLE()
+#define LCD_Init()          lcd_init()
+#define LCD_Clear(c)        lcd_clear(c)
+#define LCD_ShowString(x, y, w, h, size, s) \
+                            lcd_show_string(x, y, w, h, size, (char *)(s), BLACK)
 /* USER CODE END Includes */
+
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
@@ -163,12 +175,11 @@ int main(void)
   MX_GPIO_Init();
   MX_FSMC_Init();
   MX_USART1_UART_Init();
+  MX_USART2_UART_Init();            /* Step 3: RS485 Modbus (PA2/PA3 + DMA1 CH6/CH7) */
   MX_TIM4_Init();
 
   /* Hand-written peripheral init (no CubeMX) */
   I2C1_Init();                    /* Step 1: I2C1 bus for SHT30/DS3231/AT24C32 */
-  /* RS485_Init();                // Step 3: USART2 + DMA + PD2 direction */
-  /* ModbusRTU_Init(1, &g_regMap);  // Step 3: protocol stack */
   /* EC11_Init();                 // Step 5: rotary encoder */
 
   /* USER CODE BEGIN 2 */
@@ -188,6 +199,10 @@ int main(void)
   g_regMap.reg[MB_REG_SLAVE_ADDR - MB_REG_BASE] = 1;       /* default slave addr = 1 */
   g_regMap.reg[MB_REG_SAMPLE_PERIOD - MB_REG_BASE] = 1;    /* default 1 second */
   g_regMap.reg[MB_REG_BAUD_CODE - MB_REG_BASE] = 3;        /* default 115200 */
+
+  /* Step 3: RS485 Modbus RTU slave（USART2 已在 MX_USART2_UART_Init 初始化）
+   * 内部：PD2 方向脚 + 启动 DMA 循环接收 + IDLE 断帧 */
+  ModbusRTU_Init(1, &g_regMap);
 
   /* Create IPC objects BEFORE creating tasks */
   xQueueSensorData = xQueueCreate(QUEUE_SENSOR_DATA_LEN, sizeof(SensorData_t));
@@ -369,31 +384,28 @@ static void Task_Logger(void *pvParameters)
 static void Task_Modbus(void *pvParameters)
 {
     (void)pvParameters;
+    static uint8_t txBuf[MB_RTU_TX_BUF_SIZE];
+    uint16_t txLen;
 
     printf("[Modbus] Task started (slave addr=%d)\r\n",
            g_regMap.reg[MB_REG_SLAVE_ADDR - MB_REG_BASE]);
 
-    /* TODO Step 3: Enable USART2 DMA receive + IDLE interrupt */
-    /* TODO Step 3: HAL_UART_Receive_DMA(&huart2, rxBuf, 256); */
-
     for (;;)
     {
-        /* Block until USART2 IDLE notification from ISR */
+        /* Block until USART2 IDLE notification from ISR (one frame received) */
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
-        /* TODO Step 3:
-         * uint16_t len = 256 - __HAL_DMA_GET_COUNTER(huart2.hdmarx);
-         * HAL_UART_DMAStop(&huart2);
-         * if (ModbusRTU_ProcessFrame(rxBuf, len, txBuf, &txLen) == OK) {
-         *     RS485_SetDirection(TX);
-         *     HAL_UART_Transmit_DMA(&huart2, txBuf, txLen);
-         *     // wait TC flag, then RS485_SetDirection(RX)
-         * }
-         * HAL_UART_Receive_DMA(&huart2, rxBuf, 256); // re-arm
-         */
+        /* HandleFrame: CRC/addr 校验 + 功能码分发 + 重新启动 DMA 接收 */
+        txLen = 0;
+        if (ModbusRTU_HandleFrame(txBuf, &txLen) == MB_OK)
+        {
+            /* 内部：切发送 → DMA 发送 → 等 TC → 切回接收 */
+            RS485_SendData(txBuf, txLen);
+        }
         g_modbusFrameCnt++;
     }
 }
+
 
 /*============================================================================
  * Task_GUI - LVGL display handler

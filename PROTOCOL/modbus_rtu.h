@@ -60,6 +60,16 @@ MB_Status_t ModbusRTU_ProcessFrame(uint8_t *rxBuf, uint16_t rxLen,
                                     uint8_t *txBuf, uint16_t *txLen);
 
 /**
+ * @brief  Handle the frame received in the internal DMA buffer (after IDLE).
+ *         Validates + dispatches it, then re-arms DMA receive.
+ * @param  txBuf: output buffer for response (MB_RTU_TX_BUF_SIZE bytes)
+ * @param  txLen: output response length
+ * @return MB_OK if response generated, MB_ERR_* if frame should be discarded
+ */
+MB_Status_t ModbusRTU_HandleFrame(uint8_t *txBuf, uint16_t *txLen);
+
+
+/**
  * @brief  Compute CRC-16/Modbus over a buffer.
  * @param  data: input bytes
  * @param  len: byte count
